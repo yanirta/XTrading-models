@@ -180,7 +180,6 @@ class TrailingStopMarket(TrailingOrder):
         )
         self.add_child(market_child)
 
-
 class TrailingStopLimit(TrailingOrder):
     """Trailing stop limit order with mutable state tracking.
 
