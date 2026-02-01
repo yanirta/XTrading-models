@@ -22,7 +22,7 @@ pytest tests/test_models.py::test_function -v # Single test
 
 All models are in `src/xtrading_models/`:
 
-- **`order.py`**: Order hierarchy - base `Order` class with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders support parent-child relationships via `add_child()`.
+- **`order.py`**: Order hierarchy - base `Order` class with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders support parent-child relationships via `add_child()`. Key fields: `ocaGroup` (OCA group name), `status` ('PENDING', 'FILLED', 'CANCELLED').
 - **`bar.py`**: `BarData` - OHLCV candlestick representation
 - **`fill.py`**: `Fill`, `Execution`, `CommissionReport` - execution result models
 - **`execution_result.py`**: `ExecutionResult` - container for fills and pending orders

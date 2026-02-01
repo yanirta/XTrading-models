@@ -27,6 +27,7 @@ class Order(BaseModel):
     goodTillDate: str = ''
     goodAfterTime: str = ''
     ocaGroup: str = ''
+    status: str = 'PENDING'  # PENDING, FILLED, CANCELLED
     orderRef: str = ''
     parentId: int = UNSET_INTEGER
     transmit: bool = True

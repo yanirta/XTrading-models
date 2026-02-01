@@ -11,7 +11,9 @@ pip install xtrading-models
 ## Usage
 
 ```python
-from xtrading_models import MarketOrder, LimitOrder, BarData, UNSET_DOUBLE
+from datetime import datetime
+from decimal import Decimal
+from xtrading_models import MarketOrder, LimitOrder, BarData
 
 # Create a market order
 order = MarketOrder(action='BUY', totalQuantity=100)
