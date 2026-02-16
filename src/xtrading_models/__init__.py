@@ -5,7 +5,7 @@ from .order import (
 )
 from .bar import BarData
 from .fill import Execution, CommissionReport, Fill
-from .execution_result import ExecutionResult
+from .trade import OrderStatus, Trade, TradeLogEntry
 
 __all__ = [
     # Orders
@@ -17,6 +17,6 @@ __all__ = [
     'BarData',
     # Fill
     'Execution', 'CommissionReport', 'Fill',
-    # Result
-    'ExecutionResult'
+    # Trade lifecycle
+    'OrderStatus', 'Trade', 'TradeLogEntry',
 ]

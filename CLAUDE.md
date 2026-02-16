@@ -22,10 +22,10 @@ pytest tests/test_models.py::test_function -v # Single test
 
 All models are in `src/xtrading_models/`:
 
-- **`order.py`**: Order hierarchy - base `Order` class with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders support parent-child relationships via `add_child()`. Key fields: `ocaGroup` (OCA group name), `status` ('PENDING', 'FILLED', 'CANCELLED').
+- **`order.py`**: Order hierarchy - base `Order` class with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders are pure instructions (no status). Parent-child via `add_child()` reserved for bracket orders. Stop types have `triggered: bool` field for internal state tracking.
+- **`trade.py`**: `Trade` (lifecycle wrapper: order + orderStatus + fills + log), `OrderStatus` (fill progress tracking), `TradeLogEntry` (timestamped status entries)
 - **`bar.py`**: `BarData` - OHLCV candlestick representation
 - **`fill.py`**: `Fill`, `Execution`, `CommissionReport` - execution result models
-- **`execution_result.py`**: `ExecutionResult` - container for fills and pending orders
 
 ### Sentinels
 

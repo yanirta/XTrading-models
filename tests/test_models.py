@@ -1,8 +1,11 @@
+from datetime import datetime
 from decimal import Decimal
 import pytest
 from xtrading_models import (
     Order, LimitOrder, MarketOrder, StopOrder, StopLimitOrder,
-    TrailingStopMarket, TrailingStopLimit
+    TrailingStopMarket, TrailingStopLimit,
+    OrderStatus, Trade, TradeLogEntry,
+    Execution, CommissionReport, Fill,
 )
 from xtrading_models.order import UNSET_DOUBLE
 
@@ -94,39 +97,35 @@ def test_market_order():
 
 #region composit orders
 def test_stop_order():
-    """Test creating a stop order - composite structure with Market child."""
+    """Test creating a stop order."""
     order = StopOrder(
         action='SELL',
         totalQuantity=100,
         stopPrice=Decimal("145.00")
     )
-    
+
     assert order.orderId > 0
     assert order.action == 'SELL'
-    assert order.price == Decimal("145.00")  # Stop price in parent
+    assert order.price == Decimal("145.00")  # Stop price
     assert order.orderType == 'STP'
-    # Should have Market child
-    assert len(order.children) == 1
-    assert order.children[0].orderType == 'MKT'
-    assert order.children[0].parentId == order.orderId
+    assert order.triggered is False
+    assert len(order.children) == 0
 
 def test_stop_limit_order():
-    """Test creating a stop limit order - backward compatibility test."""
+    """Test creating a stop limit order."""
     order = StopLimitOrder(
         action='BUY',
         totalQuantity=100,
         limitPrice=Decimal("150.50"),
         stopPrice=Decimal("150.00")
     )
-    
+
     assert order.orderId > 0
-    # Parent has stop price, child has limit price
-    assert order.price == Decimal("150.00")  # Stop price in parent
-    # Child has the limit price
-    assert order.children[0].price == Decimal("150.50")
+    assert order.price == Decimal("150.00")  # Stop price
+    assert order.limitPrice == Decimal("150.50")  # Limit price
     assert order.orderType == 'STP LMT'
-    assert order.children[0].orderType == 'LMT'
-    assert order.children[0].parentId == order.orderId
+    assert order.triggered is False
+    assert len(order.children) == 0
 
 # region Child Orders Tests
 def test_order_add_multiple_children():
@@ -166,12 +165,7 @@ def test_trailing_stop_market_creation_with_amount():
     # State should be uninitialized
     assert order.stopPrice is None
     assert order.extremePrice is None
-    # Should have Market child
-    assert len(order.children) == 1
-    assert order.children[0].orderType == 'MKT'
-    assert order.children[0].action == 'BUY'
-    assert order.children[0].totalQuantity == 100
-    assert order.children[0].parentId == order.orderId
+    assert len(order.children) == 0
 
 
 def test_trailing_stop_market_creation_with_percent():
@@ -181,7 +175,7 @@ def test_trailing_stop_market_creation_with_percent():
         totalQuantity=50,
         trailingPercent=Decimal("2.5")
     )
-    
+
     assert order.orderId > 0
     assert order.action == 'SELL'
     assert order.totalQuantity == 50
@@ -190,11 +184,7 @@ def test_trailing_stop_market_creation_with_percent():
     assert order.trailingPercent == Decimal("2.5")
     assert order.stopPrice is None
     assert order.extremePrice is None
-    # Should have Market child
-    assert len(order.children) == 1
-    assert order.children[0].orderType == 'MKT'
-    assert order.children[0].action == 'SELL'
-    assert order.children[0].parentId == order.orderId
+    assert len(order.children) == 0
 
 
 def test_trailing_stop_market_requires_one_parameter():
@@ -294,12 +284,7 @@ def test_trailing_stop_limit_creation_with_amount():
     # State should be uninitialized
     assert order.stopPrice is None
     assert order.extremePrice is None
-    # Should have Limit child (price unset until triggered)
-    assert len(order.children) == 1
-    assert order.children[0].orderType == 'LMT'
-    assert order.children[0].action == 'BUY'
-    assert order.children[0].totalQuantity == 100
-    assert order.children[0].parentId == order.orderId
+    assert len(order.children) == 0
 
 
 def test_trailing_stop_limit_creation_with_percent():
@@ -310,7 +295,7 @@ def test_trailing_stop_limit_creation_with_percent():
         trailingPercent=Decimal("1.5"),
         limitOffset=Decimal("0.25")
     )
-    
+
     assert order.orderId > 0
     assert order.action == 'SELL'
     assert order.totalQuantity == 50
@@ -320,11 +305,7 @@ def test_trailing_stop_limit_creation_with_percent():
     assert order.limitOffset == Decimal("0.25")
     assert order.stopPrice is None
     assert order.extremePrice is None
-    # Should have Limit child
-    assert len(order.children) == 1
-    assert order.children[0].orderType == 'LMT'
-    assert order.children[0].action == 'SELL'
-    assert order.children[0].parentId == order.orderId
+    assert len(order.children) == 0
 
 
 def test_trailing_stop_limit_requires_one_parameter():
@@ -468,19 +449,14 @@ def test_trailing_stop_orders_unique_ids():
     order1 = TrailingStopMarket('BUY', 100, trailingDistance=Decimal("1.00"))
     order2 = TrailingStopLimit('SELL', 50, trailingDistance=Decimal("2.00"), limitOffset=Decimal("0.50"))
     order3 = TrailingStopMarket('SELL', 75, trailingPercent=Decimal("1.50"))
-    
+
     # All orders should have unique IDs
     assert order1.orderId > 0
     assert order2.orderId > order1.orderId
     assert order3.orderId > order2.orderId
-    
-    # All should have one child with unique ID
-    assert len(order1.children) == 1
-    assert len(order2.children) == 1
-    assert len(order3.children) == 1
-    assert order1.children[0].orderId > 0
-    assert order2.children[0].orderId > 0
-    assert order3.children[0].orderId > 0
+    assert len(order1.children) == 0
+    assert len(order2.children) == 0
+    assert len(order3.children) == 0
 
 
 def test_trailing_stop_fields_are_instance_vars():
@@ -537,4 +513,96 @@ def test_trailing_stop_limit_fields_are_instance_vars():
     assert order1.extremePrice == Decimal("100.00")
     assert order2.stopPrice == Decimal("195.00")
     assert order2.extremePrice == Decimal("200.00")
+# endregion
+
+# region Trade Lifecycle Tests
+def test_order_status_defaults():
+    """Test OrderStatus default values."""
+    status = OrderStatus()
+    assert status.status == 'PendingSubmit'
+    assert status.filled == Decimal('0')
+    assert status.remaining == Decimal('0')
+    assert status.avgFillPrice == Decimal('0')
+    assert status.lastFillPrice == Decimal('0')
+
+def test_order_status_done_states():
+    """Test DoneStates and ActiveStates sets."""
+    assert 'Filled' in OrderStatus.DoneStates
+    assert 'Cancelled' in OrderStatus.DoneStates
+    assert 'Submitted' in OrderStatus.ActiveStates
+    assert 'PendingSubmit' in OrderStatus.ActiveStates
+
+def test_trade_creation():
+    """Test creating a Trade with order and status."""
+    order = LimitOrder(action='BUY', totalQuantity=100, price=Decimal('150'))
+    status = OrderStatus(
+        orderId=order.orderId,
+        status='Submitted',
+        remaining=Decimal('100')
+    )
+    trade = Trade(order=order, orderStatus=status)
+
+    assert trade.order is order
+    assert trade.orderStatus.status == 'Submitted'
+    assert trade.fills == []
+    assert trade.log == []
+    assert trade.is_active is True
+    assert trade.is_done is False
+
+def test_trade_is_done():
+    """Test Trade.is_done property."""
+    order = MarketOrder(action='BUY', totalQuantity=100)
+    trade = Trade(
+        order=order,
+        orderStatus=OrderStatus(orderId=order.orderId, status='Filled')
+    )
+    assert trade.is_done is True
+    assert trade.is_active is False
+
+def test_trade_log_entry():
+    """Test TradeLogEntry creation."""
+    entry = TradeLogEntry(
+        time=datetime(2024, 1, 15, 9, 30),
+        status='Submitted',
+        message='Order submitted'
+    )
+    assert entry.status == 'Submitted'
+    assert entry.message == 'Order submitted'
+
+def test_trade_fill_tracking():
+    """Test appending fills to a Trade."""
+    order = LimitOrder(action='BUY', totalQuantity=100, price=Decimal('150'))
+    trade = Trade(
+        order=order,
+        orderStatus=OrderStatus(orderId=order.orderId, status='Submitted', remaining=Decimal('100'))
+    )
+
+    execution = Execution(orderId=order.orderId, time=datetime(2024, 1, 15, 9, 30),
+                          shares=100, price=Decimal('150'), side='BUY')
+    commission = CommissionReport(commission=Decimal('1.00'), currency='USD')
+    fill = Fill(order=order, execution=execution, commissionReport=commission,
+                time=datetime(2024, 1, 15, 9, 30))
+
+    trade.fills.append(fill)
+    trade.orderStatus.status = 'Filled'
+    trade.orderStatus.filled = Decimal('100')
+    trade.orderStatus.remaining = Decimal('0')
+
+    assert len(trade.fills) == 1
+    assert trade.is_done is True
+
+def test_stop_order_triggered_field():
+    """Test that StopOrder has triggered field."""
+    order = StopOrder(action='BUY', totalQuantity=100, stopPrice=Decimal('105'))
+    assert order.triggered is False
+    order.triggered = True
+    assert order.triggered is True
+
+def test_stop_limit_order_limit_price_field():
+    """Test that StopLimitOrder stores limitPrice as a field."""
+    order = StopLimitOrder(action='BUY', totalQuantity=100,
+                           limitPrice=Decimal('150.50'), stopPrice=Decimal('150.00'))
+    assert order.limitPrice == Decimal('150.50')
+    assert order.price == Decimal('150.00')
+    assert order.triggered is False
 # endregion

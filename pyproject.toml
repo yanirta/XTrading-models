@@ -1,6 +1,6 @@
 [project]
 name = "xtrading-models"
-version = "0.6.0"
+version = "0.7.0"
 description = "Shared trading models for XTrading ecosystem"
 authors = [{name = "Yanir Taflev", email = "yanirta+xtrading@gmail.com"}]
 license = {text = "MIT"}

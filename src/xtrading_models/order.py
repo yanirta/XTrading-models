@@ -27,7 +27,6 @@ class Order(BaseModel):
     goodTillDate: str = ''
     goodAfterTime: str = ''
     ocaGroup: str = ''
-    status: str = 'PENDING'  # PENDING, FILLED, CANCELLED
     orderRef: str = ''
     parentId: int = UNSET_INTEGER
     transmit: bool = True
@@ -80,47 +79,47 @@ class MarketOrder(Order):
         )
 
 class StopOrder(Order):
-    """Stop order implemented as Stop with Market child."""
+    """Base class for all stop-triggered orders.
+
+    All stop order types share:
+    - triggered: whether the stop condition has been met
+    - triggerPrice: the actual price at which the stop triggered (for debugging)
+    """
+
+    triggered: bool = False
+    triggerPrice: Optional[Decimal] = None
 
     def __init__(self, action: str, totalQuantity: float, stopPrice: Decimal, **kwargs):
-        # Initialize as a Stop order (parent)
+        kwargs.setdefault('orderType', 'STP')
         super().__init__(
-            orderType='STP',
             action=action,
             totalQuantity=totalQuantity,
             price=stopPrice,
             **kwargs
         )
 
-        # Create Market child order (orderId auto-assigned)
-        market_child = MarketOrder(
-            action=action,
-            totalQuantity=totalQuantity
-        )
-        self.add_child(market_child)
+class StopLimitOrder(StopOrder):
+    """Stop limit order - triggers at stop price, then evaluates as limit."""
 
-class StopLimitOrder(Order):
-    """Stop limit order implemented as Stop with Limit child."""
+    limitPrice: Decimal = UNSET_DOUBLE
+
+    @field_validator('limitPrice', mode='before')
+    @classmethod
+    def allow_unset_limit_price(cls, v):
+        """Allow UNSET_DOUBLE sentinel value."""
+        return v
 
     def __init__(self, action: str, totalQuantity: float, limitPrice: Decimal, stopPrice: Decimal, **kwargs):
-        # Initialize as a Stop order (parent)
         super().__init__(
-            orderType='STP LMT',  # Preserve backward compatibility
             action=action,
             totalQuantity=totalQuantity,
-            price=stopPrice,
+            stopPrice=stopPrice,
+            orderType='STP LMT',
+            limitPrice=limitPrice,
             **kwargs
         )
 
-        # Create Limit child order (orderId auto-assigned)
-        limit_child = LimitOrder(
-            action=action,
-            totalQuantity=totalQuantity,
-            price=limitPrice
-        )
-        self.add_child(limit_child)
-
-class TrailingOrder(Order):
+class TrailingOrder(StopOrder):
     """Base class for trailing orders."""
 
     trailingDistance: Optional[Decimal] = None
@@ -139,9 +138,10 @@ class TrailingOrder(Order):
 
     def __init__(self, orderType: str, action: str, totalQuantity: float, trailingDistance: Optional[Decimal] = None, trailingPercent: Optional[Decimal] = None, **kwargs):
         super().__init__(
-            orderType=orderType,
             action=action,
             totalQuantity=totalQuantity,
+            stopPrice=Decimal('0'),
+            orderType=orderType,
             trailingDistance=trailingDistance, # type: ignore
             trailingPercent=trailingPercent, # type: ignore
             **kwargs
@@ -151,7 +151,7 @@ class TrailingStopMarket(TrailingOrder):
     """Trailing stop market order with mutable state tracking.
 
     Tracks the extreme price and adjusts stop price as market moves favorably.
-    When stop is hit, the child Market order is executed.
+    When stop is hit, executes as a market order.
 
     Supports two modes (exactly one must be specified):
     - trailingDistance: Absolute trailing amount (e.g., trail by $2.00)
@@ -160,9 +160,8 @@ class TrailingStopMarket(TrailingOrder):
     Attributes:
         trailingDistance: Absolute distance from extreme to stop (optional)
         trailingPercent: Percentage distance from extreme to stop (optional)
-        currentStopPrice: Current stop trigger price (mutable)
+        stopPrice: Current stop trigger price (mutable)
         extremePrice: Best price seen so far (mutable)
-        children: Contains one MarketOrder child
     """
     def __init__(self, action: str, totalQuantity: float, trailingDistance: Optional[Decimal] = None, trailingPercent: Optional[Decimal] = None, **kwargs):
         super().__init__(
@@ -174,17 +173,10 @@ class TrailingStopMarket(TrailingOrder):
             **kwargs
         )
 
-        # Create Market child order (will be executed when stop triggers)
-        market_child = MarketOrder(
-            action=action,
-            totalQuantity=totalQuantity
-        )
-        self.add_child(market_child)
-
 class TrailingStopLimit(TrailingOrder):
     """Trailing stop limit order with mutable state tracking.
 
-    Similar to TrailingStopMarket but the child is a Limit order.
+    Similar to TrailingStopMarket but evaluates as a limit order when triggered.
 
     Supports two modes (exactly one must be specified):
     - trailingDistance: Absolute trailing amount (e.g., trail by $2.00)
@@ -194,9 +186,8 @@ class TrailingStopLimit(TrailingOrder):
         trailingDistance: Absolute distance from extreme to stop (optional)
         trailingPercent: Percentage distance from extreme to stop (optional)
         limitOffset: Distance from stop to limit price (always positive)
-        currentStopPrice: Current stop trigger price (mutable)
+        stopPrice: Current stop trigger price (mutable)
         extremePrice: Best price seen so far (mutable)
-        children: Contains one LimitOrder child (price set when triggered)
     """
 
     limitOffset: Decimal = Decimal('0')
@@ -215,11 +206,3 @@ class TrailingStopLimit(TrailingOrder):
             limitOffset=limitOffset,
             **kwargs
         )
-
-        # Create Limit child order (price will be set when stop triggers)
-        limit_child = LimitOrder(
-            action=action,
-            totalQuantity=totalQuantity,
-            price=Decimal('0')  # Placeholder, set when stop triggers
-        )
-        self.add_child(limit_child)
