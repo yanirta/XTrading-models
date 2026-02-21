@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 
 from .order import Order
 from .fill import Fill
@@ -10,10 +9,10 @@ from .fill import Fill
 class OrderStatus:
     orderId: int = 0
     status: str = 'PendingSubmit'
-    filled: Decimal = Decimal('0')
-    remaining: Decimal = Decimal('0')
-    avgFillPrice: Decimal = Decimal('0')
-    lastFillPrice: Decimal = Decimal('0')
+    filled: float = 0.0
+    remaining: float = 0.0
+    avgFillPrice: float = 0.0
+    lastFillPrice: float = 0.0
     parentId: int = 0
 
     PendingSubmit = 'PendingSubmit'

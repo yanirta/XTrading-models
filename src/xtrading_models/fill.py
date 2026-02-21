@@ -1,4 +1,3 @@
-from decimal import Decimal
 from dataclasses import dataclass
 from datetime import datetime
 from typing import NamedTuple, Optional
@@ -16,13 +15,13 @@ class Execution:
     exchange: str = ''
     side: str = ''
     shares: float = 0.0
-    price: Decimal = Decimal('0')
+    price: float = 0.0
     permId: int = 0
     clientId: int = 0
     orderId: int = 0
     liquidation: int = 0
     cumQty: float = 0.0
-    avgPrice: Decimal = Decimal('0')
+    avgPrice: float = 0.0
     orderRef: str = ''
     evRule: str = ''
     evMultiplier: float = 0.0
@@ -35,9 +34,9 @@ class CommissionReport:
     """Commission and P&L information for an execution."""
 
     execId: str = ''
-    commission: Decimal = Decimal('0')
+    commission: float = 0.0
     currency: str = ''
-    realizedPNL: Decimal = Decimal('0')
+    realizedPNL: float = 0.0
     yield_: float = 0.0
     yieldRedemptionDate: int = 0
 

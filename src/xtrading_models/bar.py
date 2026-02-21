@@ -1,4 +1,3 @@
-from decimal import Decimal
 from datetime import datetime
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -7,12 +6,12 @@ class BarData(BaseModel):
     """OHLCV bar data (IB-compatible) with validation."""
 
     date: datetime
-    open: Decimal = Decimal('0')
-    high: Decimal = Decimal('0')
-    low: Decimal = Decimal('0')
-    close: Decimal = Decimal('0')
+    open: float = 0.0
+    high: float = 0.0
+    low: float = 0.0
+    close: float = 0.0
     volume: int = 0
-    # average: Decimal = Decimal('0')
+    # average: float = 0.0
     # barCount: int = 0
 
     @field_validator('date')

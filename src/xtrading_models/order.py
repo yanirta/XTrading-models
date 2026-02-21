@@ -1,9 +1,8 @@
-from decimal import Decimal
 from typing import Optional, ClassVar
 from pydantic import BaseModel, Field, model_validator, field_validator
 
 
-UNSET_DOUBLE = Decimal('inf')
+UNSET_DOUBLE = float('inf')
 UNSET_INTEGER = 2**31 - 1
 
 
@@ -18,11 +17,12 @@ class Order(BaseModel):
     _next_order_id: ClassVar[int] = 1
 
     orderId: int = Field(default=0)
+    permId: int = 0
     clientId: int = 0
     action: str = ''
     totalQuantity: float = 0.0
     orderType: str = ''
-    price: Decimal = Field(default=UNSET_DOUBLE, allow_inf_nan=True)
+    price: float = Field(default=UNSET_DOUBLE, allow_inf_nan=True)
     tif: str = ''
     goodTillDate: str = ''
     goodAfterTime: str = ''
@@ -58,7 +58,7 @@ class LimitOrder(Order):
         """Allow UNSET_DOUBLE sentinel value."""
         return v
 
-    def __init__(self, action: str, totalQuantity: float, price: Decimal, **kwargs):
+    def __init__(self, action: str, totalQuantity: float, price: float, **kwargs):
         super().__init__(
             orderType='LMT',
             action=action,
@@ -87,9 +87,9 @@ class StopOrder(Order):
     """
 
     triggered: bool = False
-    triggerPrice: Optional[Decimal] = None
+    triggerPrice: Optional[float] = None
 
-    def __init__(self, action: str, totalQuantity: float, stopPrice: Decimal, **kwargs):
+    def __init__(self, action: str, totalQuantity: float, stopPrice: float, **kwargs):
         kwargs.setdefault('orderType', 'STP')
         super().__init__(
             action=action,
@@ -101,7 +101,7 @@ class StopOrder(Order):
 class StopLimitOrder(StopOrder):
     """Stop limit order - triggers at stop price, then evaluates as limit."""
 
-    limitPrice: Decimal = UNSET_DOUBLE
+    limitPrice: float = UNSET_DOUBLE
 
     @field_validator('limitPrice', mode='before')
     @classmethod
@@ -109,7 +109,7 @@ class StopLimitOrder(StopOrder):
         """Allow UNSET_DOUBLE sentinel value."""
         return v
 
-    def __init__(self, action: str, totalQuantity: float, limitPrice: Decimal, stopPrice: Decimal, **kwargs):
+    def __init__(self, action: str, totalQuantity: float, limitPrice: float, stopPrice: float, **kwargs):
         super().__init__(
             action=action,
             totalQuantity=totalQuantity,
@@ -122,10 +122,10 @@ class StopLimitOrder(StopOrder):
 class TrailingOrder(StopOrder):
     """Base class for trailing orders."""
 
-    trailingDistance: Optional[Decimal] = None
-    trailingPercent: Optional[Decimal] = None
-    stopPrice: Optional[Decimal] = None
-    extremePrice: Optional[Decimal] = None
+    trailingDistance: Optional[float] = None
+    trailingPercent: Optional[float] = None
+    stopPrice: Optional[float] = None
+    extremePrice: Optional[float] = None
 
     @model_validator(mode='after')
     def validate_trailing_params(self):
@@ -136,11 +136,11 @@ class TrailingOrder(StopOrder):
         return self
 
 
-    def __init__(self, orderType: str, action: str, totalQuantity: float, trailingDistance: Optional[Decimal] = None, trailingPercent: Optional[Decimal] = None, **kwargs):
+    def __init__(self, orderType: str, action: str, totalQuantity: float, trailingDistance: Optional[float] = None, trailingPercent: Optional[float] = None, **kwargs):
         super().__init__(
             action=action,
             totalQuantity=totalQuantity,
-            stopPrice=Decimal('0'),
+            stopPrice=0.0,
             orderType=orderType,
             trailingDistance=trailingDistance, # type: ignore
             trailingPercent=trailingPercent, # type: ignore
@@ -163,7 +163,7 @@ class TrailingStopMarket(TrailingOrder):
         stopPrice: Current stop trigger price (mutable)
         extremePrice: Best price seen so far (mutable)
     """
-    def __init__(self, action: str, totalQuantity: float, trailingDistance: Optional[Decimal] = None, trailingPercent: Optional[Decimal] = None, **kwargs):
+    def __init__(self, action: str, totalQuantity: float, trailingDistance: Optional[float] = None, trailingPercent: Optional[float] = None, **kwargs):
         super().__init__(
             orderType='TRAIL',
             action=action,
@@ -190,12 +190,12 @@ class TrailingStopLimit(TrailingOrder):
         extremePrice: Best price seen so far (mutable)
     """
 
-    limitOffset: Decimal = Decimal('0')
+    limitOffset: float = 0.0
 
     def __init__(self, action: str, totalQuantity: float,
-                 limitOffset: Decimal,
-                 trailingDistance: Optional[Decimal] = None,
-                 trailingPercent: Optional[Decimal] = None,
+                 limitOffset: float,
+                 trailingDistance: Optional[float] = None,
+                 trailingPercent: Optional[float] = None,
                  **kwargs):
         super().__init__(
             orderType='TRAIL LIMIT',

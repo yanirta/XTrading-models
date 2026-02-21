@@ -29,12 +29,12 @@ All models are in `src/xtrading_models/`:
 
 ### Sentinels
 
-Use `UNSET_DOUBLE` (Decimal infinity) and `UNSET_INTEGER` (2^31-1) for optional numeric fields rather than None.
+Use `UNSET_DOUBLE` (`float('inf')`) and `UNSET_INTEGER` (2^31-1) for optional numeric fields rather than None.
 
 ## Code Conventions
 
 ### Financial Values
-Use `decimal.Decimal` or `int` for all financial values. Never use `float` for prices.
+Use `float` for all financial values. No `Decimal` types.
 
 ### IB Compatibility
 Models follow Interactive Brokers naming conventions with camelCase fields: `orderId`, `totalQuantity`, `lmtPrice`, `auxPrice`, `clientId`, `parentId`.
