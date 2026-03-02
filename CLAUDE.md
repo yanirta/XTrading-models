@@ -1,43 +1,24 @@
-# CLAUDE.md
+# CLAUDE.md — XTrading-models
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-xtrading-models is a shared library of Pydantic-based trading models for the XTrading ecosystem. It provides order types, execution results, and market data structures compatible with Interactive Brokers conventions.
+Shared Pydantic-based trading models for the XTrading ecosystem. See `../CLAUDE.md` for workspace-wide conventions.
 
 ## Commands
 
 ```bash
-pip install -e .           # Install in development mode
-pip install -e ".[dev]"    # Install with dev dependencies (pytest)
-
-# Tests
-pytest tests/ -v                              # Run all tests
-pytest tests/test_models.py -v                # Single test file
-pytest tests/test_models.py::test_function -v # Single test
+pip install -e .
+pip install -e ".[dev]"    # With dev dependencies (pytest)
+pytest tests/ -v
 ```
 
 ## Architecture
 
 All models are in `src/xtrading_models/`:
 
-- **`order.py`**: Order hierarchy - base `Order` class with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders are pure instructions (no status). Parent-child via `add_child()` reserved for bracket orders. Stop types have `triggered: bool` field for internal state tracking.
-- **`trade.py`**: `Trade` (lifecycle wrapper: order + orderStatus + fills + log), `OrderStatus` (fill progress tracking), `TradeLogEntry` (timestamped status entries)
-- **`bar.py`**: `BarData` - OHLCV candlestick representation
-- **`fill.py`**: `Fill`, `Execution`, `CommissionReport` - execution result models
-
-### Sentinels
-
-Use `UNSET_DOUBLE` (`float('inf')`) and `UNSET_INTEGER` (2^31-1) for optional numeric fields rather than None.
+- **`order.py`**: Order hierarchy — base `Order` with `MarketOrder`, `LimitOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`. Orders are pure instructions (no status). Parent-child via `add_child()` for bracket orders. Stop types have `triggered: bool` for internal state tracking.
+- **`trade.py`**: `Trade` (lifecycle wrapper: order + orderStatus + fills + log), `OrderStatus`, `TradeLogEntry`
+- **`bar.py`**: `BarData` — OHLCV candlestick representation
+- **`fill.py`**: `Fill`, `Execution`, `CommissionReport` — execution result models
 
 ## Code Conventions
 
-### Financial Values
-Use `float` for all financial values. No `Decimal` types.
-
-### IB Compatibility
-Models follow Interactive Brokers naming conventions with camelCase fields: `orderId`, `totalQuantity`, `lmtPrice`, `auxPrice`, `clientId`, `parentId`.
-
-### File Naming
-Singular nouns (`order.py` not `orders.py`).
+- File naming: singular nouns (`order.py` not `orders.py`)
