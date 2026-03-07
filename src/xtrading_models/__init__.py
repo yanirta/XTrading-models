@@ -6,6 +6,7 @@ from .order import (
 from .bar import BarData
 from .fill import Execution, CommissionReport, Fill
 from .trade import OrderStatus, Trade, TradeLogEntry
+from .time_provider import TimeProvider
 
 __all__ = [
     # Orders
@@ -19,4 +20,6 @@ __all__ = [
     'Execution', 'CommissionReport', 'Fill',
     # Trade lifecycle
     'OrderStatus', 'Trade', 'TradeLogEntry',
+    # Time
+    'TimeProvider',
 ]
