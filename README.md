@@ -30,9 +30,9 @@ bar = BarData(
 
 ## Models
 
-- **Order classes**: `Order`, `LimitOrder`, `MarketOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`
+- **Order classes**: `Order`, `LimitOrder`, `MarketOrder`, `MarketOnCloseOrder`, `StopOrder`, `StopLimitOrder`, `TrailingStopMarket`, `TrailingStopLimit`
 - **Trade lifecycle**: `Trade`, `OrderStatus`, `TradeLogEntry`
-- **Bar data**: `BarData` - OHLCV candlestick representation
+- **Bar data**: `BarData` - OHLCV candlestick representation; `is_close_bar: bool` marks the last bar of a trading session (used by MOC order execution)
 - **Execution**: `Execution`, `CommissionReport`, `Fill`
 - **Sentinels**: `UNSET_DOUBLE`, `UNSET_INTEGER`
 
