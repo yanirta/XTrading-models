@@ -78,6 +78,19 @@ class MarketOrder(Order):
             **kwargs
         )
 
+
+class MarketOnCloseOrder(Order):
+    """Market-on-Close order — fills at bar close price."""
+
+    def __init__(self, action: str, totalQuantity: float, **kwargs):
+        super().__init__(
+            orderType='MOC',
+            action=action,
+            totalQuantity=totalQuantity,
+            tif='DAY',
+            **kwargs
+        )
+
 class StopOrder(Order):
     """Base class for all stop-triggered orders.
 

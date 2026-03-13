@@ -1,5 +1,5 @@
 from .order import (
-    Order, LimitOrder, MarketOrder, StopOrder, StopLimitOrder,
+    Order, LimitOrder, MarketOrder, MarketOnCloseOrder, StopOrder, StopLimitOrder,
     TrailingOrder, TrailingStopMarket, TrailingStopLimit,
     UNSET_DOUBLE, UNSET_INTEGER
 )
@@ -10,7 +10,7 @@ from .time_provider import TimeProvider
 
 __all__ = [
     # Orders
-    'Order', 'LimitOrder', 'MarketOrder', 'StopOrder', 'StopLimitOrder',
+    'Order', 'LimitOrder', 'MarketOrder', 'MarketOnCloseOrder', 'StopOrder', 'StopLimitOrder',
     'TrailingOrder', 'TrailingStopMarket', 'TrailingStopLimit',
     # Sentinels
     'UNSET_DOUBLE', 'UNSET_INTEGER',
