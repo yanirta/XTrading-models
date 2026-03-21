@@ -1,34 +1,38 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 
 from .order import Order
 from .fill import Fill
 
 
+class TradeStatus(str, Enum):
+    PendingSubmit = 'PendingSubmit'
+    PreSubmitted = 'PreSubmitted'
+    Submitted = 'Submitted'
+    Filled = 'Filled'
+    Cancelled = 'Cancelled'
+    Inactive = 'Inactive'
+
+
 @dataclass
 class OrderStatus:
     orderId: int = 0
-    status: str = 'PendingSubmit'
+    status: TradeStatus = TradeStatus.PendingSubmit
     filled: float = 0.0
     remaining: float = 0.0
     avgFillPrice: float = 0.0
     lastFillPrice: float = 0.0
     parentId: int = 0
 
-    PendingSubmit = 'PendingSubmit'
-    Submitted = 'Submitted'
-    Filled = 'Filled'
-    Cancelled = 'Cancelled'
-    Inactive = 'Inactive'
-
-    DoneStates = {'Filled', 'Cancelled'}
-    ActiveStates = {'PendingSubmit', 'Submitted'}
+    DoneStates = {TradeStatus.Filled, TradeStatus.Cancelled}
+    ActiveStates = {TradeStatus.PendingSubmit, TradeStatus.Submitted}
 
 
 @dataclass
 class TradeLogEntry:
     time: datetime
-    status: str
+    status: TradeStatus
     message: str = ''
 
 

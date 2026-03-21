@@ -1,3 +1,6 @@
+from importlib.metadata import version
+__version__ = version("xtrading-models")
+
 from .order import (
     Order, LimitOrder, MarketOrder, MarketOnCloseOrder, StopOrder, StopLimitOrder,
     TrailingOrder, TrailingStopMarket, TrailingStopLimit,
@@ -5,7 +8,7 @@ from .order import (
 )
 from .bar import BarData
 from .fill import Execution, CommissionReport, Fill
-from .trade import OrderStatus, Trade, TradeLogEntry
+from .trade import OrderStatus, Trade, TradeLogEntry, TradeStatus
 from .time_provider import TimeProvider
 
 __all__ = [
@@ -19,7 +22,7 @@ __all__ = [
     # Fill
     'Execution', 'CommissionReport', 'Fill',
     # Trade lifecycle
-    'OrderStatus', 'Trade', 'TradeLogEntry',
+    'OrderStatus', 'Trade', 'TradeLogEntry', 'TradeStatus',
     # Time
     'TimeProvider',
 ]
