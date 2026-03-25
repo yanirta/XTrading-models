@@ -14,3 +14,7 @@ class TimeProvider(ABC):
     @abstractmethod
     def today(self) -> date:
         pass
+
+    def set_time(self, dt: datetime) -> None:
+        """Advance simulated time. No-op for live providers."""
+        pass
