@@ -8,6 +8,8 @@ import pandas_market_calendars as mcal
 
 _nyse = None
 
+_MARKET_CLOSE = dtime(16, 0)
+
 
 def _get_nyse():
     global _nyse
@@ -25,6 +27,10 @@ def _prev_trading_day(d: date) -> date:
         if len(schedule) > 0:
             return candidate
     raise ValueError(f"No trading day found within 10 days before {d}")
+
+
+def _is_trading_day(d: date) -> bool:
+    return len(_get_nyse().valid_days(start_date=d, end_date=d)) > 0
 
 
 class TimeProvider(ABC):
@@ -61,3 +67,16 @@ class TimeProvider(ABC):
         reference = d if d is not None else self.now().date()
         prev = _prev_trading_day(reference)
         return self.localize(datetime.combine(prev, dtime(0, 0)))
+
+    def last_completed_trading_day(self) -> date:
+        """Most recent trading day whose session has fully closed (16:00 ET).
+
+        After 16:00 ET: today if it's a trading day, else previous trading day.
+        Before 16:00 ET: previous trading day.
+        """
+        now = self.now()
+        et_now = now.astimezone(ZoneInfo("America/New_York"))
+        today = et_now.date()
+        if et_now.time() >= _MARKET_CLOSE and _is_trading_day(today):
+            return today
+        return _prev_trading_day(today)
