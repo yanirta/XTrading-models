@@ -8,6 +8,7 @@ from .fill import Fill
 
 class TradeStatus(str, Enum):
     PendingSubmit = 'PendingSubmit'
+    PendingCancel = 'PendingCancel'
     PreSubmitted = 'PreSubmitted'
     Submitted = 'Submitted'
     Filled = 'Filled'
