@@ -1,6 +1,6 @@
 [project]
 name = "xtrading-models"
-version = "0.12.1"
+version = "0.12.2"
 description = "Shared trading models for XTrading ecosystem"
 authors = [{name = "Yanir Taflev", email = "yanirta+xtrading@gmail.com"}]
 license = {text = "MIT"}
@@ -16,7 +16,6 @@ keywords = ["trading", "models", "finance", "algotrading", "backtesting"]
 requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0",
-    "pandas_market_calendars>=4.0"
 ]
 
 [project.optional-dependencies]

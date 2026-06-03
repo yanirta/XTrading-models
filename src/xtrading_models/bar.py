@@ -10,7 +10,7 @@ class BarData(BaseModel):
     high: float = 0.0
     low: float = 0.0
     close: float = 0.0
-    volume: int = 0
+    volume: float = 0
     is_close_bar: bool = False
     # average: float = 0.0
     # barCount: int = 0
