@@ -35,6 +35,7 @@ bar = BarData(
   - `TradeStatus` is a `str` enum: `PendingSubmit`, `PreSubmitted`, `Submitted`, `Filled`, `Cancelled`, `Inactive`
   - Inherits from `str` — compares equal to plain string literals for backward compatibility
 - **Bar data**: `BarData` - OHLCV candlestick representation; `is_close_bar: bool` marks the last bar of a trading session (used by MOC order execution)
+  - A `slots` dataclass, not a pydantic model (since 0.13.0): ~11x less memory and ~3.5x faster to build, for code that holds millions of bars. Keyword-only; numeric fields are stored as `float`; invalid OHLC raises `ValueError`, a missing or non-`datetime` `date` raises `TypeError`. Copy with changes via `dataclasses.replace(bar, ...)` (was `bar.model_copy(update=...)`).
 - **Execution**: `Execution`, `CommissionReport`, `Fill`
 - **Sentinels**: `UNSET_DOUBLE`, `UNSET_INTEGER`
 

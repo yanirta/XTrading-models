@@ -1,6 +1,6 @@
 # CLAUDE.md — XTrading-models
 
-Shared Pydantic-based trading models for the XTrading ecosystem. See `../CLAUDE.md` for workspace-wide conventions.
+Shared trading models for the XTrading ecosystem — Pydantic models, except `BarData`, which is a `slots` dataclass for memory and speed (see README). See `../CLAUDE.md` for workspace-wide conventions.
 
 ## Architecture
 
